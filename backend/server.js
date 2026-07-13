@@ -5,6 +5,8 @@ import { createServer } from 'http';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import workspaceRoutes from './routes/workspaceRoutes.js';
+import projectRoutes from './routes/projectRoutes.js';
+import taskRoutes from './routes/taskRoutes.js';
 
 dotenv.config();
 connectDB();
@@ -22,10 +24,13 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/workspaces', workspaceRoutes);
+// projectRoutes and taskRoutes each define their own full paths internally
+// (e.g. /workspaces/:id/projects, /projects/:id/tasks), so we mount them
+// at the bare /api root rather than a fixed prefix.
+app.use('/api', projectRoutes);
+app.use('/api', taskRoutes);
 
 // Route imports will be added here in later stages:
-// app.use('/api/projects', projectRoutes);
-// app.use('/api/tasks', taskRoutes);
 // app.use('/api/messages', messageRoutes);
 
 const httpServer = createServer(app);
