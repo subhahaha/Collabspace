@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyWorkspacesApi, createWorkspaceApi } from '../api/workspaceApi';
+import { getMyWorkspacesApi, createWorkspaceApi, deleteWorkspaceApi } from '../api/workspaceApi';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -45,6 +45,21 @@ export default function DashboardPage() {
       setError(err.response?.data?.message || 'Could not create workspace.');
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleDeleteWorkspace = async (e, workspaceId, workspaceName) => {
+    e.stopPropagation(); // don't trigger the card's navigate-to-workspace click
+    const confirmed = window.confirm(
+      `Delete "${workspaceName}"? This will permanently delete all its projects and tasks. This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteWorkspaceApi(workspaceId);
+      setWorkspaces((prev) => prev.filter((ws) => ws._id !== workspaceId));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not delete workspace.');
     }
   };
 
@@ -97,7 +112,17 @@ export default function DashboardPage() {
                 onClick={() => navigate(`/workspaces/${ws._id}`)}
               >
                 <h3 style={styles.workspaceName}>{ws.name}</h3>
-                <span style={styles.roleTag}>{ws.role}</span>
+                <div style={styles.cardFooter}>
+                  <span style={styles.roleTag}>{ws.role}</span>
+                  {ws.role === 'owner' && (
+                    <button
+                      onClick={(e) => handleDeleteWorkspace(e, ws._id, ws.name)}
+                      style={styles.deleteBtn}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -173,6 +198,18 @@ const styles = {
   workspaceName: {
     fontSize: '16px',
     marginBottom: '10px',
+  },
+  cardFooter: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  deleteBtn: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--color-danger)',
+    fontSize: '12px',
+    padding: '2px 4px',
   },
   roleTag: {
     fontFamily: 'var(--font-mono)',

@@ -1,5 +1,7 @@
 import Workspace from '../models/Workspace.js';
 import WorkspaceMember from '../models/WorkspaceMember.js';
+import Project from '../models/Project.js';
+import Task from '../models/Task.js';
 import User from '../models/User.js';
 
 // POST /api/workspaces
@@ -121,5 +123,28 @@ export const getWorkspaceMembers = async (req, res) => {
     res.status(200).json({ members: memberships });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching members', error: error.message });
+  }
+};
+
+// DELETE /api/workspaces/:id
+// Deleting a workspace should also clean up everything that lives inside
+// it — otherwise you'd end up with "orphaned" projects, tasks, and
+// memberships in the database that reference a workspace that no longer
+// exists. We delete child records first, then the workspace itself.
+export const deleteWorkspace = async (req, res) => {
+  try {
+    const workspaceId = req.params.id;
+
+    const projects = await Project.find({ workspaceId });
+    const projectIds = projects.map((p) => p._id);
+
+    await Task.deleteMany({ projectId: { $in: projectIds } });
+    await Project.deleteMany({ workspaceId });
+    await WorkspaceMember.deleteMany({ workspaceId });
+    await Workspace.findByIdAndDelete(workspaceId);
+
+    res.status(200).json({ message: 'Workspace deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting workspace', error: error.message });
   }
 };

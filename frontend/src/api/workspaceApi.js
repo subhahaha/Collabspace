@@ -14,3 +14,6 @@ export const addMemberApi = (workspaceId, email, role) =>
 
 export const getWorkspaceMembersApi = (workspaceId) =>
   apiClient.get(`/api/workspaces/${workspaceId}/members`).then((res) => res.data);
+
+export const deleteWorkspaceApi = (workspaceId) =>
+  apiClient.delete(`/api/workspaces/${workspaceId}`).then((res) => res.data);

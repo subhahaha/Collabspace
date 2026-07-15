@@ -2,11 +2,14 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { createServer } from 'http';
+import { Server } from 'socket.io';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import workspaceRoutes from './routes/workspaceRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
+import { initSocket } from './sockets/socketHandler.js';
 
 dotenv.config();
 connectDB();
@@ -29,13 +32,18 @@ app.use('/api/workspaces', workspaceRoutes);
 // at the bare /api root rather than a fixed prefix.
 app.use('/api', projectRoutes);
 app.use('/api', taskRoutes);
-
-// Route imports will be added here in later stages:
-// app.use('/api/messages', messageRoutes);
+app.use('/api', messageRoutes);
 
 const httpServer = createServer(app);
 
-// Socket.io will attach to httpServer in a later stage, once chat is built.
+// Socket.io attaches to the raw HTTP server (not the Express app) — this
+// is exactly why we set server.js up with createServer() back in Stage 1
+// instead of just using app.listen().
+const io = new Server(httpServer, {
+  cors: { origin: '*' }, // fine for a student project; a real app would
+                          // restrict this to the actual frontend domain.
+});
+initSocket(io);
 
 const PORT = process.env.PORT || 5000;
 

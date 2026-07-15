@@ -37,3 +37,13 @@ export const requireAdmin = (req, res, next) => {
   }
   next();
 };
+
+// Stricter than requireAdmin — reserved for destructive, hard-to-undo
+// actions like deleting the whole workspace. Admins can manage members
+// and projects, but only the owner can delete the workspace itself.
+export const requireOwner = (req, res, next) => {
+  if (req.membership.role !== 'owner') {
+    return res.status(403).json({ message: 'Only the workspace owner can do this' });
+  }
+  next();
+};

@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getWorkspaceByIdApi } from '../api/workspaceApi';
 import { getProjectsByWorkspaceApi, createProjectApi } from '../api/projectApi';
+import ChatPanel from '../components/ChatPanel';
+import MembersPanel from '../components/MembersPanel';
 
 export default function WorkspacePage() {
   const { workspaceId } = useParams();
   const navigate = useNavigate();
 
   const [workspace, setWorkspace] = useState(null);
+  const [role, setRole] = useState(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newProjectTitle, setNewProjectTitle] = useState('');
@@ -25,6 +28,7 @@ export default function WorkspacePage() {
         getProjectsByWorkspaceApi(workspaceId),
       ]);
       setWorkspace(workspaceData.workspace);
+      setRole(workspaceData.role);
       setProjects(projectsData.projects);
     } catch (err) {
       setError('Could not load this workspace.');
@@ -56,59 +60,78 @@ export default function WorkspacePage() {
 
   return (
     <div style={styles.page}>
-      <header style={styles.header}>
-        <Link to="/dashboard" style={styles.backLink}>
-          ← Back to dashboard
-        </Link>
-        <h1 style={styles.heading}>{workspace.name}</h1>
-      </header>
+      <div style={styles.mainColumn}>
+        <header style={styles.header}>
+          <Link to="/dashboard" style={styles.backLink}>
+            ← Back to dashboard
+          </Link>
+          <h1 style={styles.heading}>{workspace.name}</h1>
+        </header>
 
-      <form onSubmit={handleCreateProject} style={styles.createForm}>
-        <input
-          type="text"
-          className="field-input"
-          placeholder="New project title"
-          value={newProjectTitle}
-          onChange={(e) => setNewProjectTitle(e.target.value)}
-          style={styles.createInput}
-        />
-        <button type="submit" className="btn-primary" disabled={creating}>
-          {creating ? 'Creating...' : '+ Create Project'}
-        </button>
-      </form>
+        <MembersPanel workspaceId={workspaceId} currentRole={role} />
 
-      {error && <p className="error-text">{error}</p>}
+        <form onSubmit={handleCreateProject} style={styles.createForm}>
+          <input
+            type="text"
+            className="field-input"
+            placeholder="New project title"
+            value={newProjectTitle}
+            onChange={(e) => setNewProjectTitle(e.target.value)}
+            style={styles.createInput}
+          />
+          <button type="submit" className="btn-primary" disabled={creating}>
+            {creating ? 'Creating...' : '+ Create Project'}
+          </button>
+        </form>
 
-      {projects.length === 0 ? (
-        <p style={styles.emptyText}>
-          No projects yet — create one above to start a Kanban board.
-        </p>
-      ) : (
-        <div style={styles.grid}>
-          {projects.map((project) => (
-            <div
-              key={project._id}
-              className="pinned-card"
-              style={styles.projectCard}
-              onClick={() => navigate(`/projects/${project._id}`)}
-            >
-              <h3 style={styles.projectTitle}>{project.title}</h3>
-              {project.description && (
-                <p style={styles.projectDescription}>{project.description}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+        {error && <p className="error-text">{error}</p>}
+
+        {projects.length === 0 ? (
+          <p style={styles.emptyText}>
+            No projects yet — create one above to start a Kanban board.
+          </p>
+        ) : (
+          <div style={styles.grid}>
+            {projects.map((project) => (
+              <div
+                key={project._id}
+                className="pinned-card"
+                style={styles.projectCard}
+                onClick={() => navigate(`/projects/${project._id}`)}
+              >
+                <h3 style={styles.projectTitle}>{project.title}</h3>
+                {project.description && (
+                  <p style={styles.projectDescription}>{project.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={styles.chatColumn}>
+        <ChatPanel workspaceId={workspaceId} />
+      </div>
     </div>
   );
 }
 
 const styles = {
   page: {
+    display: 'flex',
+    gap: '24px',
     padding: '32px',
-    maxWidth: '900px',
+    maxWidth: '1200px',
     margin: '0 auto',
+    height: 'calc(100vh - 64px)',
+  },
+  mainColumn: {
+    flex: 1,
+    overflowY: 'auto',
+  },
+  chatColumn: {
+    width: '320px',
+    flexShrink: 0,
   },
   header: {
     marginBottom: '24px',

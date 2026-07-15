@@ -5,9 +5,10 @@ import {
   getWorkspaceById,
   addMember,
   getWorkspaceMembers,
+  deleteWorkspace,
 } from '../controllers/workspaceController.js';
 import { protect } from '../middleware/authMiddleware.js';
-import { checkMembership, requireAdmin } from '../middleware/workspaceMiddleware.js';
+import { checkMembership, requireAdmin, requireOwner } from '../middleware/workspaceMiddleware.js';
 
 const router = express.Router();
 
@@ -25,5 +26,8 @@ router.get('/:id/members', protect, checkMembership, getWorkspaceMembers);
 // addMember needs an extra layer: not just "are you a member" but
 // "are you an owner/admin" — hence requireAdmin stacked on top.
 router.post('/:id/members', protect, checkMembership, requireAdmin, addMember);
+
+// Deleting the whole workspace is stricter still — owner only.
+router.delete('/:id', protect, checkMembership, requireOwner, deleteWorkspace);
 
 export default router;
