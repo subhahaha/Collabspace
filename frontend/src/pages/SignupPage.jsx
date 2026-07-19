@@ -11,9 +11,21 @@ export default function SignupPage() {
   const { signup } = useAuth();
   const navigate = useNavigate();
 
+  const hasMinLength = password.length >= 8;
+  const hasNumber = /\d/.test(password);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Check client-side first — catches obvious problems instantly,
+    // without waiting on a round trip to the backend just to be told
+    // something we could already tell locally.
+    if (!hasMinLength || !hasNumber) {
+      setError('Password must be at least 8 characters and include a number.');
+      return;
+    }
+
     setSubmitting(true);
     try {
       await signup(name, email, password);
@@ -64,9 +76,18 @@ export default function SignupPage() {
               className="field-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              minLength={6}
               required
             />
+            {password.length > 0 && (
+              <div style={styles.requirements}>
+                <span style={hasMinLength ? styles.reqMet : styles.reqUnmet}>
+                  At least 8 characters
+                </span>
+                <span style={hasNumber ? styles.reqMet : styles.reqUnmet}>
+                  Includes a number
+                </span>
+              </div>
+            )}
           </div>
 
           {error && <p className="error-text">{error}</p>}
@@ -104,6 +125,19 @@ const styles = {
   },
   field: {
     marginBottom: '16px',
+  },
+  requirements: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '3px',
+    marginTop: '6px',
+    fontSize: '12px',
+  },
+  reqMet: {
+    color: 'var(--color-success)',
+  },
+  reqUnmet: {
+    color: 'var(--color-ink-soft)',
   },
   submitBtn: {
     width: '100%',

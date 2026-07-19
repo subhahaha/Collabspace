@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getWorkspaceMembersApi, addMemberApi } from '../api/workspaceApi';
+import { getWorkspaceMembersApi, addMemberApi, removeMemberApi } from '../api/workspaceApi';
+import { useAuth } from '../context/AuthContext';
 
 // currentRole comes from the parent (fetched via getWorkspaceByIdApi),
 // which already tells us the logged-in user's role in THIS workspace.
@@ -9,6 +10,7 @@ import { getWorkspaceMembersApi, addMemberApi } from '../api/workspaceApi';
 // rejected. This is the same "UI hides it, backend actually enforces
 // it" split we've used throughout the app.
 export default function MembersPanel({ workspaceId, currentRole }) {
+  const { user } = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInviteForm, setShowInviteForm] = useState(false);
@@ -52,6 +54,18 @@ export default function MembersPanel({ workspaceId, currentRole }) {
       setError(err.response?.data?.message || 'Could not add member.');
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleRemove = async (userId, name) => {
+    const confirmed = window.confirm(`Remove ${name} from this workspace?`);
+    if (!confirmed) return;
+
+    try {
+      await removeMemberApi(workspaceId, userId);
+      await loadMembers();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not remove member.');
     }
   };
 
@@ -107,12 +121,26 @@ export default function MembersPanel({ workspaceId, currentRole }) {
         <p style={styles.emptyText}>Loading members...</p>
       ) : (
         <ul style={styles.memberList}>
-          {members.map((m) => (
-            <li key={m._id} style={styles.memberRow}>
-              <span style={styles.memberName}>{m.userId.name}</span>
-              <span style={styles.roleTag}>{m.role}</span>
-            </li>
-          ))}
+          {members.map((m) => {
+            const isSelf = String(m.userId._id) === String(user.id || user._id);
+            const canRemove = canInvite && m.role !== 'owner' && !isSelf;
+            return (
+              <li key={m._id} style={styles.memberRow}>
+                <span style={styles.memberName}>{m.userId.name}</span>
+                <span style={styles.memberRight}>
+                  <span style={styles.roleTag}>{m.role}</span>
+                  {canRemove && (
+                    <button
+                      onClick={() => handleRemove(m.userId._id, m.userId.name)}
+                      style={styles.removeBtn}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -180,6 +208,18 @@ const styles = {
   },
   memberName: {
     color: 'var(--color-ink)',
+  },
+  memberRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  },
+  removeBtn: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--color-danger)',
+    fontSize: '12px',
+    padding: '2px 4px',
   },
   roleTag: {
     fontFamily: 'var(--font-mono)',

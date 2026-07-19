@@ -5,6 +5,7 @@ import {
   getWorkspaceById,
   addMember,
   getWorkspaceMembers,
+  removeMember,
   deleteWorkspace,
 } from '../controllers/workspaceController.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -26,6 +27,7 @@ router.get('/:id/members', protect, checkMembership, getWorkspaceMembers);
 // addMember needs an extra layer: not just "are you a member" but
 // "are you an owner/admin" — hence requireAdmin stacked on top.
 router.post('/:id/members', protect, checkMembership, requireAdmin, addMember);
+router.delete('/:id/members/:userId', protect, checkMembership, requireAdmin, removeMember);
 
 // Deleting the whole workspace is stricter still — owner only.
 router.delete('/:id', protect, checkMembership, requireOwner, deleteWorkspace);

@@ -126,6 +126,35 @@ export const getWorkspaceMembers = async (req, res) => {
   }
 };
 
+// DELETE /api/workspaces/:id/members/:userId
+// Removes a member from the workspace — the fix for exactly the kind of
+// mistake you'd want undoable: typo'd an email, added the wrong person.
+// Restricted to owner/admin (requireAdmin), same as inviting. We
+// deliberately block removing the OWNER through this endpoint — that's
+// not an accidental-invite scenario, and doing so would leave the
+// workspace ownerless. Deleting the whole workspace is the intentional
+// path for that, not a member-removal button.
+export const removeMember = async (req, res) => {
+  try {
+    const { id: workspaceId, userId } = req.params;
+
+    const membershipToRemove = await WorkspaceMember.findOne({ workspaceId, userId });
+    if (!membershipToRemove) {
+      return res.status(404).json({ message: 'This user is not a member of the workspace' });
+    }
+
+    if (membershipToRemove.role === 'owner') {
+      return res.status(400).json({ message: 'The workspace owner cannot be removed' });
+    }
+
+    await WorkspaceMember.findByIdAndDelete(membershipToRemove._id);
+
+    res.status(200).json({ message: 'Member removed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error removing member', error: error.message });
+  }
+};
+
 // DELETE /api/workspaces/:id
 // Deleting a workspace should also clean up everything that lives inside
 // it — otherwise you'd end up with "orphaned" projects, tasks, and

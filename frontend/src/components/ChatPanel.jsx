@@ -3,6 +3,27 @@ import { useAuth } from '../context/AuthContext';
 import { getMessagesApi } from '../api/messageApi';
 import { connectSocket, disconnectSocket } from '../socket';
 
+// Just the time, e.g. "10:32 AM" — the date itself is now handled
+// separately by the divider labels between groups of messages.
+const formatTime = (isoString) =>
+  new Date(isoString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+// Label shown once per group of messages from the same day — "Today"
+// if it's today, "Yesterday" if it's yesterday, otherwise a short date.
+const formatDateDivider = (isoString) => {
+  const date = new Date(isoString);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) return 'Today';
+  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+};
+
+const isSameDay = (isoA, isoB) => new Date(isoA).toDateString() === new Date(isoB).toDateString();
+
 export default function ChatPanel({ workspaceId }) {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
@@ -79,33 +100,46 @@ export default function ChatPanel({ workspaceId }) {
         ) : messages.length === 0 ? (
           <p style={styles.emptyText}>No messages yet — say hello!</p>
         ) : (
-          messages.map((msg) => {
+          messages.map((msg, index) => {
             // Explicit String() conversion guards against comparing
             // an ObjectId-like value to a plain string, which would
             // silently fail (=== is strict — "123" === "123" is true,
             // but two differently-typed representations of the same
             // id might not be, depending on where they came from).
             const isMine = String(msg.senderId._id) === String(user.id || user._id);
+
+            // Show a date divider before the first message overall, and
+            // before the first message of any NEW day — this replaces
+            // repeating the date on every single message.
+            const prevMsg = messages[index - 1];
+            const showDivider = !prevMsg || !isSameDay(prevMsg.createdAt, msg.createdAt);
+
             return (
-              <div
-                key={msg._id}
-                style={{
-                  ...styles.messageRow,
-                  alignSelf: isMine ? 'flex-end' : 'flex-start',
-                  alignItems: isMine ? 'flex-end' : 'flex-start',
-                }}
-              >
-                <span style={styles.sender}>
-                  {isMine ? 'You' : msg.senderId.name}
-                </span>
-                <p
+              <div key={msg._id} style={{ display: 'flex', flexDirection: 'column' }}>
+                {showDivider && (
+                  <div style={styles.dateDivider}>
+                    <span>{formatDateDivider(msg.createdAt)}</span>
+                  </div>
+                )}
+                <div
                   style={{
-                    ...styles.messageText,
-                    ...(isMine ? styles.messageTextMine : {}),
+                    ...styles.messageRow,
+                    alignSelf: isMine ? 'flex-end' : 'flex-start',
                   }}
                 >
-                  {msg.text}
-                </p>
+                  <span style={styles.sender}>
+                    {isMine ? 'You' : msg.senderId.name}
+                    <span style={styles.timestamp}> · {formatTime(msg.createdAt)}</span>
+                  </span>
+                  <p
+                    style={{
+                      ...styles.messageText,
+                      ...(isMine ? styles.messageTextMine : {}),
+                    }}
+                  >
+                    {msg.text}
+                  </p>
+                </div>
               </div>
             );
           })
@@ -159,12 +193,22 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
   },
+  dateDivider: {
+    textAlign: 'center',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '11px',
+    color: 'var(--color-ink-soft)',
+    margin: '4px 0 12px 0',
+  },
   sender: {
     display: 'block',
     fontFamily: 'var(--font-mono)',
     fontSize: '11px',
     color: 'var(--color-ink-soft)',
     marginBottom: '3px',
+  },
+  timestamp: {
+    opacity: 0.7,
   },
   messageText: {
     fontSize: '14px',
