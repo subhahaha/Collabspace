@@ -12,6 +12,17 @@
   --color-danger: #c1502e;
   --color-border: #d7dce6;
 
+  /* Semantic tokens: things that can't just reuse ink/surface when the
+     theme flips (e.g. a dark button needs light text in BOTH themes) */
+  --color-link: #5c3a0a;
+  --color-btn-bg: #1b2340;
+  --color-btn-text: #ffffff;
+  --color-btn-hover: #5c3a0a;
+  --color-input-bg: #ffffff;
+  --color-column-bg: rgba(27, 35, 64, 0.03);
+  --color-column-over: rgba(232, 163, 61, 0.12);
+  color-scheme: light;
+
   /* Type */
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -20,6 +31,31 @@
   /* Layout */
   --radius: 10px;
   --shadow-card: 0 1px 2px rgba(27, 35, 64, 0.06), 0 4px 10px rgba(27, 35, 64, 0.06);
+}
+
+/* Dark theme: same variable names, different values. Every component
+   reads var(--color-...), so flipping data-theme on <html> restyles
+   the whole app without touching any component. */
+:root[data-theme='dark'] {
+  --color-bg: #0f1322;
+  --color-surface: #181d33;
+  --color-ink: #e6e9f2;
+  --color-ink-soft: #9aa3bf;
+  --color-accent: #e8a33d;
+  --color-accent-ink: #4a2d06;
+  --color-success: #4fb59f;
+  --color-danger: #e0775a;
+  --color-border: #2b3252;
+
+  --color-link: #f0b95e;
+  --color-btn-bg: #e8a33d;
+  --color-btn-text: #1b1305;
+  --color-btn-hover: #f0b95e;
+  --color-input-bg: #11162a;
+  --color-column-bg: rgba(255, 255, 255, 0.04);
+  --color-column-over: rgba(232, 163, 61, 0.16);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.3);
+  color-scheme: dark;
 }
 
 * {
@@ -73,8 +109,8 @@ input, textarea, select {
 }
 
 .btn-primary {
-  background: var(--color-ink);
-  color: white;
+  background: var(--color-btn-bg);
+  color: var(--color-btn-text);
   border: none;
   border-radius: var(--radius);
   padding: 10px 18px;
@@ -84,7 +120,7 @@ input, textarea, select {
 }
 
 .btn-primary:hover {
-  background: var(--color-accent-ink);
+  background: var(--color-btn-hover);
 }
 
 .btn-primary:disabled {
@@ -106,7 +142,8 @@ input, textarea, select {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   font-size: 14px;
-  background: white;
+  background: var(--color-input-bg);
+  color: var(--color-ink);
 }
 
 .field-input:focus {

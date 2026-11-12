@@ -37,7 +37,7 @@ export default function KanbanColumn({ status, tasks, onTaskClick }) {
 
 const styles = {
   column: {
-    background: 'rgba(27, 35, 64, 0.03)',
+    background: 'var(--color-column-bg)',
     borderRadius: 'var(--radius)',
     padding: '14px',
     minHeight: '200px',
@@ -45,7 +45,7 @@ const styles = {
     transition: 'background 0.15s ease',
   },
   columnOver: {
-    background: 'rgba(232, 163, 61, 0.12)',
+    background: 'var(--color-column-over)',
   },
   columnHeader: {
     display: 'flex',
