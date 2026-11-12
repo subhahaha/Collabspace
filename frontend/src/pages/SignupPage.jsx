@@ -150,7 +150,7 @@ const styles = {
     textAlign: 'center',
   },
   link: {
-    color: 'var(--color-accent-ink)',
+    color: 'var(--color-link)',
     fontWeight: 600,
   },
 };
