@@ -35,6 +35,12 @@ export const initSocket = (io) => {
   io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.user.name} (${socket.id})`);
 
+    // Every connection also joins a private room named after the user.
+    // Workspace rooms only receive messages while you have that chat
+    // open; this personal room is how the dashboard can still hear
+    // "something new arrived in one of your workspaces".
+    socket.join(`user:${socket.user._id}`);
+
     // A user must explicitly "join" a workspace's room before they'll
     // receive messages from it — this mirrors opening a chat screen in
     // a real app. We re-check membership here (not just trusting the
@@ -84,6 +90,24 @@ export const initSocket = (io) => {
         // keeps the sender's own UI in sync with exactly what the server
         // actually saved, rather than trusting a local optimistic copy.
         io.to(workspaceId).emit('new-message', populatedMessage);
+
+        // Tell everyone ELSE in the workspace (via their personal rooms)
+        // that there's new activity. Kept in its own try/catch so a
+        // problem here can never make a successfully saved message
+        // look like it failed to send.
+        try {
+          const others = await WorkspaceMember.find({
+            workspaceId,
+            userId: { $ne: socket.user._id },
+          }).select('userId');
+          if (others.length > 0) {
+            io.to(others.map((m) => `user:${m.userId}`)).emit('workspace-activity', {
+              workspaceId,
+            });
+          }
+        } catch (notifyError) {
+          console.error('Failed to send workspace-activity:', notifyError.message);
+        }
       } catch (error) {
         socket.emit('error', { message: 'Failed to send message' });
       }

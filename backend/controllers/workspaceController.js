@@ -2,6 +2,7 @@ import Workspace from '../models/Workspace.js';
 import WorkspaceMember from '../models/WorkspaceMember.js';
 import Project from '../models/Project.js';
 import Task from '../models/Task.js';
+import Message from '../models/Message.js';
 import User from '../models/User.js';
 
 // POST /api/workspaces
@@ -50,10 +51,21 @@ export const getMyWorkspaces = async (req, res) => {
 
     // Attach the user's role in each workspace — the frontend will want
     // this to decide what UI to show (e.g. only owners see "delete workspace").
-    const workspacesWithRole = workspaces.map((ws) => {
-      const membership = memberships.find((m) => m.workspaceId.toString() === ws._id.toString());
-      return { ...ws.toObject(), role: membership.role };
-    });
+    // Also attach how many messages from OTHER people arrived since this
+    // user last opened that workspace's chat (drives the indicator on the
+    // dashboard card).
+    const workspacesWithRole = await Promise.all(
+      workspaces.map(async (ws) => {
+        const membership = memberships.find((m) => m.workspaceId.toString() === ws._id.toString());
+        const lastRead = membership.lastReadAt || membership.createdAt;
+        const unreadCount = await Message.countDocuments({
+          workspaceId: ws._id,
+          senderId: { $ne: req.user._id },
+          createdAt: { $gt: lastRead },
+        });
+        return { ...ws.toObject(), role: membership.role, unreadCount };
+      })
+    );
 
     res.status(200).json({ workspaces: workspacesWithRole });
   } catch (error) {
@@ -175,5 +187,19 @@ export const deleteWorkspace = async (req, res) => {
     res.status(200).json({ message: 'Workspace deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting workspace', error: error.message });
+  }
+};
+
+// POST /api/workspaces/:id/read
+// Called when someone opens (or is looking at) a workspace's chat.
+// checkMembership already attached the membership document, so we just
+// stamp it with the current time.
+export const markWorkspaceRead = async (req, res) => {
+  try {
+    req.membership.lastReadAt = new Date();
+    await req.membership.save();
+    res.status(200).json({ message: 'Marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error marking workspace as read', error: error.message });
   }
 };

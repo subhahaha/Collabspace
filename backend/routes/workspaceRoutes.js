@@ -6,6 +6,7 @@ import {
   addMember,
   getWorkspaceMembers,
   removeMember,
+  markWorkspaceRead,
   deleteWorkspace,
 } from '../controllers/workspaceController.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -23,6 +24,7 @@ router.get('/', protect, getMyWorkspaces);
 
 router.get('/:id', protect, checkMembership, getWorkspaceById);
 router.get('/:id/members', protect, checkMembership, getWorkspaceMembers);
+router.post('/:id/read', protect, checkMembership, markWorkspaceRead);
 
 // addMember needs an extra layer: not just "are you a member" but
 // "are you an owner/admin" — hence requireAdmin stacked on top.
