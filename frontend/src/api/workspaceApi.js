@@ -20,3 +20,6 @@ export const deleteWorkspaceApi = (workspaceId) =>
 
 export const removeMemberApi = (workspaceId, userId) =>
   apiClient.delete(`/api/workspaces/${workspaceId}/members/${userId}`).then((res) => res.data);
+
+export const markWorkspaceReadApi = (workspaceId) =>
+  apiClient.post(`/api/workspaces/${workspaceId}/read`).then((res) => res.data);

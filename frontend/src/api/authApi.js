@@ -7,3 +7,6 @@ export const loginApi = (email, password) =>
   apiClient.post('/api/auth/login', { email, password }).then((res) => res.data);
 
 export const getMeApi = () => apiClient.get('/api/auth/me').then((res) => res.data);
+
+export const changePasswordApi = (currentPassword, newPassword) =>
+  apiClient.put('/api/auth/change-password', { currentPassword, newPassword }).then((res) => res.data);

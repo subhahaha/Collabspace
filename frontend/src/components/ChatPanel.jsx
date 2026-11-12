@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getMessagesApi } from '../api/messageApi';
+import { markWorkspaceReadApi } from '../api/workspaceApi';
 import { connectSocket, disconnectSocket } from '../socket';
 
 // Just the time, e.g. "10:32 AM" — the date itself is now handled
@@ -44,8 +45,14 @@ export default function ChatPanel({ workspaceId }) {
     const socket = connectSocket();
     socket.emit('join-workspace', workspaceId);
 
+    // Looking at the chat counts as reading it, so the unread indicator
+    // on the dashboard stays clear. Failure here is harmless, hence the
+    // swallowed error.
+    const markRead = () => markWorkspaceReadApi(workspaceId).catch(() => {});
+
     const handleNewMessage = (message) => {
       setMessages((prev) => [...prev, message]);
+      markRead();
     };
     const handleSocketError = (err) => {
       console.error('Socket error:', err.message);
@@ -53,6 +60,7 @@ export default function ChatPanel({ workspaceId }) {
 
     socket.on('new-message', handleNewMessage);
     socket.on('error', handleSocketError);
+    markRead();
 
     // History loading is separate and can safely be async — even if
     // StrictMode causes this to run twice, it just re-fetches and

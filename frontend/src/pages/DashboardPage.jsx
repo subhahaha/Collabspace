@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { getMyWorkspacesApi, createWorkspaceApi, deleteWorkspaceApi } from '../api/workspaceApi';
+import { connectSocket } from '../socket';
+import SettingsModal from '../components/SettingsModal';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const [workspaces, setWorkspaces] = useState([]);
@@ -12,9 +16,28 @@ export default function DashboardPage() {
   const [newWorkspaceName, setNewWorkspaceName] = useState('');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     loadWorkspaces();
+  }, []);
+
+  // Live indicator: the server sends 'workspace-activity' to our personal
+  // socket room whenever someone else writes in one of our workspaces.
+  // We just bump that card's unread count. (The count is recomputed from
+  // the database on the next page load, so this only needs to be right
+  // for the time you're sitting on this page.)
+  useEffect(() => {
+    const socket = connectSocket();
+    const handleActivity = ({ workspaceId }) => {
+      setWorkspaces((prev) =>
+        prev.map((ws) =>
+          ws._id === workspaceId ? { ...ws, unreadCount: (ws.unreadCount || 0) + 1 } : ws
+        )
+      );
+    };
+    socket.on('workspace-activity', handleActivity);
+    return () => socket.off('workspace-activity', handleActivity);
   }, []);
 
   const loadWorkspaces = async () => {
@@ -73,6 +96,34 @@ export default function DashboardPage() {
         <h1 style={styles.heading}>CollabSpace</h1>
         <div style={styles.headerRight}>
           <span style={styles.userName}>{user?.name}</span>
+          <button
+            onClick={toggleTheme}
+            style={styles.themeBtn}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              {theme === 'dark' ? (
+                <>
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                </>
+              ) : (
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              )}
+            </svg>
+          </button>
+          <button onClick={() => setSettingsOpen(true)} style={styles.logoutBtn}>Settings</button>
           <button onClick={logout} style={styles.logoutBtn}>Log out</button>
         </div>
       </header>
@@ -111,6 +162,29 @@ export default function DashboardPage() {
                 style={styles.workspaceCard}
                 onClick={() => navigate(`/workspaces/${ws._id}`)}
               >
+                {ws.unreadCount > 0 && (
+                  <span
+                    style={styles.unreadBadge}
+                    title={`${ws.unreadCount} new message${ws.unreadCount === 1 ? '' : 's'}`}
+                    aria-label={`${ws.unreadCount} new message${ws.unreadCount === 1 ? '' : 's'}`}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      fillOpacity="0.2"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    {ws.unreadCount > 9 ? '9+' : ws.unreadCount}
+                  </span>
+                )}
                 <h3 style={styles.workspaceName}>{ws.name}</h3>
                 <div style={styles.cardFooter}>
                   <span style={styles.roleTag}>{ws.role}</span>
@@ -128,6 +202,8 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+
+      {settingsOpen && <SettingsModal onClose={() => setSettingsOpen(false)} />}
     </div>
   );
 }
@@ -155,6 +231,16 @@ const styles = {
   userName: {
     fontSize: '14px',
     color: 'var(--color-ink-soft)',
+  },
+  themeBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'none',
+    border: '1px solid var(--color-border)',
+    borderRadius: 'var(--radius)',
+    padding: '7px',
+    color: 'var(--color-ink)',
   },
   logoutBtn: {
     background: 'none',
@@ -198,6 +284,18 @@ const styles = {
   workspaceName: {
     fontSize: '16px',
     marginBottom: '10px',
+    paddingRight: '56px', // keep long names clear of the unread badge and pin dot
+  },
+  unreadBadge: {
+    position: 'absolute',
+    top: '8px',
+    right: '30px', // sits just left of the amber pin dot
+    display: 'flex',
+    alignItems: 'center',
+    gap: '3px',
+    fontFamily: 'var(--font-mono)',
+    fontSize: '11px',
+    color: 'var(--color-accent)',
   },
   cardFooter: {
     display: 'flex',
