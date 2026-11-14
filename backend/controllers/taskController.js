@@ -1,4 +1,6 @@
 import Task from '../models/Task.js';
+import Project from '../models/Project.js';
+import Workspace from '../models/Workspace.js';
 import WorkspaceMember from '../models/WorkspaceMember.js';
 
 // POST /api/projects/:projectId/tasks
@@ -105,5 +107,50 @@ export const deleteTask = async (req, res) => {
     res.status(200).json({ message: 'Task deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting task', error: error.message });
+  }
+};
+
+// GET /api/tasks/mine
+// Every OPEN task assigned to the logged-in user, across all their
+// workspaces. Tasks only know their project, and projects only know their
+// workspace, so we walk that chain: memberships -> projects -> tasks.
+// Starting from the user's CURRENT memberships also means that if someone
+// is removed from a workspace, their tasks there stop showing up.
+export const getMyTasks = async (req, res) => {
+  try {
+    const memberships = await WorkspaceMember.find({ userId: req.user._id }).select('workspaceId');
+    const workspaceIds = memberships.map((m) => m.workspaceId);
+
+    const [workspaces, projects] = await Promise.all([
+      Workspace.find({ _id: { $in: workspaceIds } }).select('name'),
+      Project.find({ workspaceId: { $in: workspaceIds } }).select('title workspaceId'),
+    ]);
+
+    const workspaceNames = new Map(workspaces.map((w) => [String(w._id), w.name]));
+    const projectsById = new Map(projects.map((p) => [String(p._id), p]));
+
+    const tasks = await Task.find({
+      assigneeId: req.user._id,
+      projectId: { $in: projects.map((p) => p._id) },
+      status: { $ne: 'done' },
+    }).sort({ createdAt: -1 });
+
+    const result = tasks.map((task) => {
+      const project = projectsById.get(String(task.projectId));
+      return {
+        _id: task._id,
+        title: task.title,
+        status: task.status,
+        dueDate: task.dueDate,
+        projectId: project._id,
+        projectTitle: project.title,
+        workspaceId: project.workspaceId,
+        workspaceName: workspaceNames.get(String(project.workspaceId)) || '',
+      };
+    });
+
+    res.status(200).json({ tasks: result });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching your tasks', error: error.message });
   }
 };

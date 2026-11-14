@@ -1,5 +1,11 @@
 import express from 'express';
-import { createTask, getTasksByProject, updateTask, deleteTask } from '../controllers/taskController.js';
+import {
+  createTask,
+  getTasksByProject,
+  getMyTasks,
+  updateTask,
+  deleteTask,
+} from '../controllers/taskController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { checkProjectAccess } from '../middleware/projectMiddleware.js';
 import { checkTaskAccess } from '../middleware/taskMiddleware.js';
@@ -9,6 +15,10 @@ const router = express.Router();
 // Nested under a project: /api/projects/:projectId/tasks
 router.post('/projects/:projectId/tasks', protect, checkProjectAccess, createTask);
 router.get('/projects/:projectId/tasks', protect, checkProjectAccess, getTasksByProject);
+
+// Cross-workspace view for the sidebar's "My Tasks" page.
+// (No clash with /tasks/:id below: that one is PATCH/DELETE only.)
+router.get('/tasks/mine', protect, getMyTasks);
 
 // Standalone task routes: /api/tasks/:id
 // This is the endpoint the frontend calls on every drag-and-drop move.
