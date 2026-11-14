@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getMessagesApi } from '../api/messageApi';
 import { markWorkspaceReadApi } from '../api/workspaceApi';
-import { connectSocket, disconnectSocket } from '../socket';
+import { connectSocket } from '../socket';
 
 // Just the time, e.g. "10:32 AM" — the date itself is now handled
 // separately by the divider labels between groups of messages.

@@ -4,7 +4,10 @@ import SignupPage from './pages/SignupPage';
 import DashboardPage from './pages/DashboardPage';
 import WorkspacePage from './pages/WorkspacePage';
 import ProjectBoardPage from './pages/ProjectBoardPage';
+import MyTasksPage from './pages/MyTasksPage';
+import NotesPage from './pages/NotesPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import AppLayout from './components/AppLayout';
 
 function App() {
   return (
@@ -12,35 +15,24 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
 
+      {/* Every logged-in page shares one layout (the sidebar). The
+          ProtectedRoute wraps the layout once instead of each page. */}
       <Route
-        path="/dashboard"
         element={
           <ProtectedRoute>
-            <DashboardPage />
+            <AppLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/my-tasks" element={<MyTasksPage />} />
+        <Route path="/notes" element={<NotesPage />} />
+        <Route path="/workspaces/:workspaceId" element={<WorkspacePage />} />
+        <Route path="/projects/:projectId" element={<ProjectBoardPage />} />
+      </Route>
 
-      <Route
-        path="/workspaces/:workspaceId"
-        element={
-          <ProtectedRoute>
-            <WorkspacePage />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/projects/:projectId"
-        element={
-          <ProtectedRoute>
-            <ProjectBoardPage />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Any unmatched path redirects to dashboard, which itself
-          redirects to login if the user isn't authenticated. */}
+      {/* Any unmatched path goes to the dashboard, which redirects to
+          login if the user isn't authenticated. */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

@@ -30,7 +30,7 @@ export default function WorkspacePage() {
       setWorkspace(workspaceData.workspace);
       setRole(workspaceData.role);
       setProjects(projectsData.projects);
-    } catch (err) {
+    } catch {
       setError('Could not load this workspace.');
     } finally {
       setLoading(false);
@@ -46,6 +46,7 @@ export default function WorkspacePage() {
     try {
       const { project } = await createProjectApi(workspaceId, newProjectTitle.trim());
       setProjects((prev) => [project, ...prev]);
+      window.dispatchEvent(new Event('projects-changed')); // lets the sidebar refresh
       setNewProjectTitle('');
     } catch (err) {
       setError(err.response?.data?.message || 'Could not create project.');
@@ -123,7 +124,7 @@ const styles = {
     padding: '32px',
     maxWidth: '1200px',
     margin: '0 auto',
-    height: 'calc(100vh - 64px)',
+    height: '100%',
   },
   mainColumn: {
     flex: 1,

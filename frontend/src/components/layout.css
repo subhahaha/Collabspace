@@ -1,0 +1,241 @@
+/* Layout and sidebar styles. Colors all come from the theme variables in
+   index.css, so light/dark mode works here without extra rules. These live
+   in a stylesheet (not inline styles) because they need hover states and a
+   mobile breakpoint, which inline styles can't express. */
+
+.app-shell {
+  display: flex;
+  height: 100vh;
+  background: var(--color-bg);
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+}
+
+.sidebar-brand {
+  padding: 20px 18px 12px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  background: none;
+  border: none;
+  color: var(--color-ink);
+  text-align: left;
+}
+
+.sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 10px 12px;
+}
+
+.sidebar-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  padding: 16px 10px 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--color-ink-soft);
+  text-decoration: none;
+  background: none;
+  border: none;
+  text-align: left;
+}
+
+.nav-item:hover {
+  background: var(--color-column-bg);
+  color: var(--color-ink);
+}
+
+.nav-item.active {
+  background: var(--color-column-over);
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+/* Buttons nested inside a workspace row: look like plain text */
+.nav-ghost {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  text-align: left;
+}
+
+.nav-ghost-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-chevron {
+  transition: transform 0.15s ease;
+}
+
+.nav-chevron.expanded {
+  transform: rotate(90deg);
+}
+
+.nav-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-accent-ink);
+  background: var(--color-accent);
+  border-radius: 10px;
+  padding: 1px 7px;
+}
+
+.nav-sub {
+  margin: 2px 0 4px 26px;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-sub .nav-item {
+  font-size: 13px;
+  padding: 6px 10px;
+}
+
+.nav-empty {
+  font-size: 12px;
+  color: var(--color-ink-soft);
+  padding: 4px 10px;
+}
+
+.sidebar-account {
+  border-top: 1px solid var(--color-border);
+  padding: 12px;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-avatar {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.account-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 6px;
+  color: var(--color-ink);
+}
+
+.account-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.account-actions button {
+  flex: 1;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 7px 0;
+  font-size: 13px;
+  color: var(--color-ink);
+}
+
+.mobile-topbar,
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 800px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop.open {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 40;
+  }
+
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+}
