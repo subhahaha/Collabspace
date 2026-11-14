@@ -9,6 +9,7 @@ import workspaceRoutes from './routes/workspaceRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
+import noteRoutes from './routes/noteRoutes.js';
 import { initSocket } from './sockets/socketHandler.js';
 
 dotenv.config();
@@ -33,6 +34,7 @@ app.use('/api/workspaces', workspaceRoutes);
 app.use('/api', projectRoutes);
 app.use('/api', taskRoutes);
 app.use('/api', messageRoutes);
+app.use('/api/notes', noteRoutes);
 
 const httpServer = createServer(app);
 
