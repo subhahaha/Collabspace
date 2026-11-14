@@ -13,3 +13,6 @@ export const updateTaskApi = (taskId, updates) =>
 
 export const deleteTaskApi = (taskId) =>
   apiClient.delete(`/api/tasks/${taskId}`).then((res) => res.data);
+
+// Every open task assigned to the logged-in user, across all workspaces.
+export const getMyTasksApi = () => apiClient.get('/api/tasks/mine').then((res) => res.data);
