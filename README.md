@@ -1,5 +1,9 @@
 # CollabSpace
 
+Live demo: https://collabspace-psi-roan.vercel.app
+
+The backend runs on a free hosting tier that goes to sleep when nobody is using it, so the very first load after a quiet period can take up to a minute. After that it responds normally.
+
 CollabSpace is a team collaboration app that combines a Trello-style Kanban board with Slack-style real-time chat, built entirely on the MERN stack. I built it to go deeper into full-stack development than my earlier projects allowed — specifically to work with a real backend and database (as opposed to a mock API), JWT-based authentication, role-based permissions, and real-time features with Socket.io.
 
 The idea: teams need somewhere to organize tasks and somewhere to talk about them, and those two things usually live in separate apps. CollabSpace puts both in one place, scoped per workspace.
@@ -80,6 +84,10 @@ npm run dev
 ```
 
 By default the frontend expects the backend at `http://localhost:5000` — change `VITE_API_URL` in `.env` if yours is somewhere else.
+
+Deployment
+
+The frontend is on Vercel with frontend as the root directory and VITE_API_URL pointing at the backend. A vercel.json rewrite sends every path to index.html, so refreshing on a page like /dashboard does not 404. The backend is on Render with backend as the root directory, npm start as the start command, and MONGO_URI, JWT_SECRET and CLIENT_URL set as environment variables. CORS, for both the REST API and Socket.io, only allows the address in CLIENT_URL.
 
 ## What I'd add next
 
