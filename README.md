@@ -8,6 +8,14 @@ CollabSpace is a team collaboration app that combines a Trello-style Kanban boar
 
 The idea: teams need somewhere to organize tasks and somewhere to talk about them, and those two things usually live in separate apps. CollabSpace puts both in one place, scoped per workspace.
 
+## Screenshots
+
+<img src="docs/screenshots/login-dark.png" alt="Login page in dark theme" width="420">
+
+<img src="docs/screenshots/dashboard.png" alt="Dashboard with workspaces and unread badges" width="800">
+
+<img src="docs/screenshots/kanban-board.png" alt="Kanban board with drag and drop" width="800">
+
 ## What it does
 
 - Sign up and log in with JWT-based authentication (passwords hashed with bcrypt)
@@ -16,7 +24,12 @@ The idea: teams need somewhere to organize tasks and somewhere to talk about the
 - Create tasks, assign them to teammates, set due dates, and drag them between To Do, In Progress, and Done
 - Real-time group chat per workspace, built with Socket.io — messages appear instantly for everyone in the room, no refreshing
 - Role-based access control throughout: only owners can delete a workspace, only owners/admins can invite members, and every workspace-scoped action checks membership before allowing it
-
+- Unread message badges on each workspace, in the dashboard and in the sidebar. They update live while you are on another page.
+- A sidebar for moving around: your workspaces and their projects, plus links to the pages below.
+- My Tasks: every open task assigned to you across all your workspaces, grouped as overdue, due this week, later and no due date.
+- Private notes with search, for ideas and reminders. Only the person who wrote a note can see it.
+- Light and dark themes, remembered between visits.
+- Access control throughout. Only owners can delete a workspace, only owners and admins can invite or remove members, and every workspace action checks membership first.
 ## Tech stack
 
 **Frontend:** React 19, Vite, React Router, Axios, Socket.io-client, @dnd-kit for drag-and-drop
