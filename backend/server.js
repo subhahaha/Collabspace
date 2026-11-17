@@ -17,7 +17,16 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+// Only these websites may call the API from a browser. CLIENT_URL can hold
+// several addresses separated by commas (e.g. your Vercel URL plus a custom
+// domain). Trailing slashes are stripped, because the browser's Origin
+// header never has one and a mismatch would silently block everything.
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 // Simple health check route — useful for confirming the server is alive,
@@ -42,8 +51,7 @@ const httpServer = createServer(app);
 // is exactly why we set server.js up with createServer() back in Stage 1
 // instead of just using app.listen().
 const io = new Server(httpServer, {
-  cors: { origin: '*' }, // fine for a student project; a real app would
-                          // restrict this to the actual frontend domain.
+  cors: { origin: allowedOrigins }, // same allow-list as the REST API
 });
 initSocket(io);
 
